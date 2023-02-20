@@ -3,26 +3,28 @@ package com.example.taskmanagement.mapper;
 import com.example.taskmanagement.model.User;
 import org.apache.ibatis.annotations.*;
 
+import java.util.List;
+
 @Mapper
 public interface UserMapper {
-    @Insert("INSERT INTO user (username, password, role) VALUES(#{username}, #{password}, #{role})")
+    @Insert("insert into `user` (`username`, `password`, `role`) values(#{username}, #{password}, #{role})")
     Integer addUser(String username, String password, String role);
 
-    @Delete("DELETE FROM user WHERE username = #{username}")
-    Integer deleteUserByUsername(String username);
+    @Delete("delete from `user` where `user_id` = #{userid}")
+    Integer deleteUserByUserId(Long userId);
 
-    @Delete("DELETE FROM user WHERE user_id = #{userId}")
-    Integer deleteUserByUserId(Integer userId);
+    @Delete("delete from `user`")
+    Integer deleteAllUsers();
 
-    @Update("UPDATE user SET username = #{newUsername}, password = #{newPassword}, role = #{role} WHERE username = #{username}")
-    Integer updateUserByUsername(String username, String newUsername, String newPassword, String role);
+    @Update("update `user` set `username` = #{username}, `password` = #{password}, `role` = #{role} where `user_id` = #{userId}")
+    Integer updateUserByUserId(Long userId, String username, String password, String role);
 
-    @Update("UPDATE user SET username = #{newUsername}, password = #{newPassword}, role = #{role} WHERE user_id = #{userId}")
-    Integer updateUserByUserId(String userId, String newUsername, String newPassword, String role);
-
-    @Select("SELECT user_id, username, password, role FROM user WHERE username = #{username}")
+    @Select("select * from `user` where `username` = #{username}")
     User getUserByUsername(String username);
 
-    @Select(("SELECT user_id, username, password, role FROM user WHERE user_id = #{userId}"))
-    User getUserByUserId(Integer userId);
+    @Select("select * from user where `user_id` = #{userId}")
+    User getUserByUserId(Long userId);
+
+    @Select("select * from `user`")
+    List<User> getAllUsers();
 }

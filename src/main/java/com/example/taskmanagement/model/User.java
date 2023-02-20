@@ -7,7 +7,7 @@ import org.hibernate.validator.constraints.Length;
 
 public class User {
     @NotNull(message = "User id cannot be null")
-    @Min(value = 0, message = "User id must be equal or greater than 0, but 0 for meaningless")
+    @Min(value = 0, message = "User id must be equal to or greater than 0, but 0 for meaningless")
     private Long userId;
     @NotBlank(message = "User role cannot be blank")
     private String role;
