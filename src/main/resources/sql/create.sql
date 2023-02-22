@@ -34,7 +34,7 @@ create table if not exists `user` (
 drop table if exists `task`;
 create table if not exists `task` (
    `task_id` bigint(20) primary key auto_increment comment '作业id',
-   `class_id` bigint(20) not null unique comment '班级id',
+   `class_id` bigint(20) not null comment '班级id',
    `task_title` varchar(20) character set utf8mb4 collate utf8mb4_0900_ai_ci not null comment '作业标题',
    `task_desc` varchar(256) character set utf8mb4 collate utf8mb4_0900_ai_ci not null comment '作业描述',
    `date_start` timestamp(0) not null default current_timestamp(0) comment '开始日期',
@@ -62,12 +62,12 @@ create table if not exists `comment` (
 -- 学生作业表
 drop table if exists `student_task`;
 create table if not exists `student_task` (
-    `student_id` bigint(20) unique comment '学生id',
-    `task_id` bigint(20) primary key comment '作业id',
-    `student_score` tinyint(3) comment '评分',
-    `student_remark` varchar(256) character set utf8mb4 collate utf8mb4_0900_ai_ci comment '评语',
+    `student_id` bigint(20) comment '学生id',
+    `task_id` bigint(20) comment '作业id',
+    `score` tinyint(3) comment '评分',
+    `remark` varchar(256) character set utf8mb4 collate utf8mb4_0900_ai_ci comment '评语',
     `attachment` varchar(256) character set utf8mb4 collate utf8mb4_0900_ai_ci comment '附件位置',
-    `task_content` text character set utf8mb4 collate utf8mb4_0900_ai_ci comment '作业内容'
+    `content` text character set utf8mb4 collate utf8mb4_0900_ai_ci comment '作业内容'
 ) engine = InnoDB default charset = utf8mb4 collate = utf8mb4_0900_ai_ci;
 
 
