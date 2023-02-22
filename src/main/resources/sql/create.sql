@@ -13,10 +13,10 @@ set names utf8mb4;
 set foreign_key_checks = 0;
 
 -- 班级表
-drop table if exists `class`;
-create table `class` (
+drop table if exists `classroom`;
+create table `classroom` (
     `class_id` bigint(20) primary key auto_increment comment '班级id',
-    `lecturer_id` bigint(20) not null unique comment '教师id',
+    `lecturer_id` bigint(20) not null comment '教师id',
     `class_name` varchar(50) character set utf8mb4 collate utf8mb4_0900_ai_ci not null comment '班级名称',
     `class_code` char(6) character set utf8mb4 collate utf8mb4_0900_ai_ci not null unique comment  '邀请码'
 ) engine = InnoDB default charset = utf8mb4 collate = utf8mb4_0900_ai_ci;
@@ -96,11 +96,11 @@ create table  if not exists `student_info` (
 ) engine = InnoDB default charset = utf8mb4 collate = utf8mb4_0900_ai_ci;
 
 -- 班级学生表
-drop table if exists `class_student`;
-create table if not exists `class_student` (
+drop table if exists `classroom_student`;
+create table if not exists `classroom_student` (
     `class_id` bigint(20) not null unique comment '班级id',
     `student_id` bigint(20) not null unique comment '学生id',
-    `joined` char(1) character set utf8mb4 collate utf8mb4_0900_ai_ci comment '已加入为是，待加入为否'
+    `joined` char(1) character set utf8mb4 collate utf8mb4_0900_ai_ci default 'N' comment '已加入为是，待加入为否'
 ) engine = InnoDB default charset = utf8mb4 collate = utf8mb4_0900_ai_ci;
 
 -- sample

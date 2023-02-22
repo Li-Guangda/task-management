@@ -9,6 +9,10 @@ public class Result<T> {
         this.data = data;
     }
 
+    static public Result onlyMessage(String message) {
+        return new Result(message, null);
+    }
+
     public String getMessage() {
         return message;
     }
