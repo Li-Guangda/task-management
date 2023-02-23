@@ -54,9 +54,10 @@ create table if not exists `notice` (
 drop table if exists `comment`;
 create table if not exists `comment` (
     `comment_id` bigint(20) primary key auto_increment comment '评论id',
-    `class_id` bigint(20) not null unique comment '班级id',
-    `user_id` bigint(20) not null unique comment '用户id',
-    `content` varchar(256) character set utf8mb4 collate utf8mb4_0900_ai_ci not null comment '评论内容'
+    `class_id` bigint(20) not null comment '班级id',
+    `user_id` bigint(20) not null comment '用户id',
+    `content` varchar(256) character set utf8mb4 collate utf8mb4_0900_ai_ci not null comment '评论内容',
+    `date` timestamp(0) default current_timestamp(0) comment '发表日期'
 ) engine = InnoDB default charset = utf8mb4 collate = utf8mb4_0900_ai_ci;
 
 -- 学生作业表
