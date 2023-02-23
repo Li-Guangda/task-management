@@ -45,7 +45,7 @@ create table if not exists `task` (
 drop table if exists `notice`;
 create table if not exists `notice` (
     `notice_id` bigint(20) primary key auto_increment comment '公告id',
-    `class_id` bigint(20) not null unique comment '班级id',
+    `class_id` bigint(20) not null comment '班级id',
     `content` text character set utf8mb4 collate utf8mb4_0900_ai_ci not null comment '公告内容',
     `date` timestamp(0) default current_timestamp(0) comment  '发布日期'
 ) engine = InnoDB default charset = utf8mb4 collate = utf8mb4_0900_ai_ci;
