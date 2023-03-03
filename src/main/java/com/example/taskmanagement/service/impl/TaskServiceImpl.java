@@ -39,23 +39,24 @@ public class TaskServiceImpl implements ITaskService {
         taskMapper.insert(taskPO);
 
         // 添加选择题
-        ChoiceQuestionPO choiceQuestionPO = new ChoiceQuestionPO();
         for (ChoiceQuestion choiceQuestion: newTaskParams.getChoiceQuestions()) {
+            ChoiceQuestionPO choiceQuestionPO = new ChoiceQuestionPO();
             choiceQuestionPO.setTaskId(taskPO.getTaskId());
             choiceQuestionPO.setSequenceNumber(choiceQuestion.getSequenceNumber());
+            choiceQuestionPO.setTitle(choiceQuestion.getTitle());
             choiceQuestionPO.setType(choiceQuestion.getType());
             choiceQuestionPO.setScore(choiceQuestion.getScore());
             choiceQuestionMapper.insert(choiceQuestionPO);
 
-            QuestionOptionPO questionOptionPO = new QuestionOptionPO();
             for (ChoiceOption choiceOption: choiceQuestion.getOptions()) {
+                QuestionOptionPO questionOptionPO = new QuestionOptionPO();
                 questionOptionPO.setChoiceQuestionId(choiceQuestionPO.getChoiceQuestionId());
                 questionOptionPO.setSequenceNumber(choiceOption.getSequenceNumber());
                 questionOptionPO.setContent(choiceOption.getContent());
                 questionOptionMapper.insert(questionOptionPO);
 
                 ChoiceQuestionAnswerPO choiceQuestionAnswerPO = new ChoiceQuestionAnswerPO();
-                if (choiceOption.isAnswer()) {
+                if (choiceOption.getIsAnswer()) {
                     choiceQuestionAnswerPO.setChoiceQuestionId(choiceQuestionPO.getChoiceQuestionId());
                     choiceQuestionAnswerPO.setQuestionOptionId(questionOptionPO.getQuestionOptionId());
                     choiceQuestionAnswerMapper.insert(choiceQuestionAnswerPO);
@@ -67,7 +68,7 @@ public class TaskServiceImpl implements ITaskService {
         for (ShortQuestion shortQuestion: newTaskParams.getShortQuestions()) {
             ShortAnswerQuestionPO shortAnswerQuestionPO = new ShortAnswerQuestionPO();
             shortAnswerQuestionPO.setTaskId(taskPO.getTaskId());
-            shortAnswerQuestionPO.setSequenceNumber(shortQuestion.getNumber());
+            shortAnswerQuestionPO.setSequenceNumber(shortQuestion.getSequenceNumber());
             shortAnswerQuestionPO.setTitle(shortQuestion.getTitle());
             shortAnswerQuestionPO.setScore(shortQuestion.getScore());
             shortAnswerQuestionMapper.insert(shortAnswerQuestionPO);
@@ -77,15 +78,15 @@ public class TaskServiceImpl implements ITaskService {
     @Override
     @Transactional
     public void submitStudentTask(StudentAnswerParams studentAnswerParams) {
-        StudentChoicePO studentChoicePO = new StudentChoicePO();
         for(Long questionOptionId: studentAnswerParams.getQuestionOptionIds()) {
+            StudentChoicePO studentChoicePO = new StudentChoicePO();
             studentChoicePO.setStudentId(studentAnswerParams.getStudentId());
             studentChoicePO.setQuestionOptionId(questionOptionId);
             studentChoiceMapper.insert(studentChoicePO);
         }
 
-        StudentShortAnswerPO studentShortAnswerPO = new StudentShortAnswerPO();
         for (ShortQuestionAnswer shortAnswer: studentAnswerParams.getShortAnswers()) {
+            StudentShortAnswerPO studentShortAnswerPO = new StudentShortAnswerPO();
             studentShortAnswerPO.setStudentId(studentAnswerParams.getStudentId());
             studentShortAnswerPO.setShortAnswerQuestionId(shortAnswer.getShortAnswerQuestionId());
             studentShortAnswerPO.setAnswer(shortAnswer.getAnswer());
@@ -103,11 +104,11 @@ public class TaskServiceImpl implements ITaskService {
     @Transactional
     public void remarkStudentTask(RemarkParams remarkParams) {
         StudentTaskPO studentTaskPO = new StudentTaskPO();
-        studentTaskPO.setTaskId(remarkParams.getTaskId());
-        studentTaskPO.setStudentId(remarkParams.getStudentId());
         studentTaskPO.setRemark(remarkParams.getRemark());
         studentTaskPO.setChecked(true);
-        studentTaskMapper.insert(studentTaskPO);
+        QueryWrapper<StudentTaskPO> studentTaskPOQueryWrapper = new QueryWrapper<>();
+        studentTaskPOQueryWrapper.eq("task_id", remarkParams.getTaskId()).eq("student_id", remarkParams.getStudentId());
+        studentTaskMapper.update(studentTaskPO, studentTaskPOQueryWrapper);
 
         QueryWrapper<StudentShortAnswerPO> studentShortAnswerPOQueryWrapper = new QueryWrapper<>();
         StudentShortAnswerPO studentShortAnswerPO = new StudentShortAnswerPO();
@@ -174,39 +175,42 @@ public class TaskServiceImpl implements ITaskService {
         studenIdsAll.removeAll(studentIdsIsNotChecked);
         List<Long> studentIdsIsNotFinished = studenIdsAll;
 
-        List<StudentInfoPO> studentInfoPOSIsNotFinished = studentInfoMapper.selectBatchIds(studentIdsIsNotFinished);
-        List<StudentInfoPO> studentInfoPOSIsNotChecked = studentInfoMapper.selectBatchIds(studentIdsIsNotChecked);
-        List<StudentInfoPO> studentTaskPOSIsChecked = studentInfoMapper.selectBatchIds(studentIdsIsChecked);
+        List<StudentInfoPO> studentInfoPOSIsNotFinished = (studentIdsIsNotFinished.size() == 0) ? null : studentInfoMapper.selectBatchIds(studentIdsIsNotFinished);
+        List<StudentInfoPO> studentInfoPOSIsNotChecked = (studentIdsIsNotChecked.size() == 0) ? null : studentInfoMapper.selectBatchIds(studentIdsIsNotChecked);
+        List<StudentInfoPO> studentTaskPOSIsChecked = (studentIdsIsChecked.size() == 0) ? null : studentInfoMapper.selectBatchIds(studentIdsIsChecked);
 
         List<StudentInfo> studentTaskIsChecked = new ArrayList<>();
-        for(StudentInfoPO studentInfoPO: studentTaskPOSIsChecked) {
-            studentTaskIsChecked.add(new StudentInfo(
-                    studentInfoPO.getStudentId(),
-                    studentInfoPO.getName(),
-                    studentInfoPO.getAvatar(),
-                    true
-            ));
-        }
+        if (studentTaskPOSIsChecked != null)
+            for(StudentInfoPO studentInfoPO: studentTaskPOSIsChecked) {
+                studentTaskIsChecked.add(new StudentInfo(
+                        studentInfoPO.getStudentId(),
+                        studentInfoPO.getName(),
+                        studentInfoPO.getAvatar(),
+                        true
+                ));
+            }
 
         List<StudentInfo> studentTaskIsNotChecked = new ArrayList<>();
-        for(StudentInfoPO studentInfoPO: studentInfoPOSIsNotChecked) {
-            studentTaskIsNotChecked.add(new StudentInfo(
-                    studentInfoPO.getStudentId(),
-                    studentInfoPO.getName(),
-                    studentInfoPO.getAvatar(),
-                    true
-            ));
+        if (studentInfoPOSIsNotChecked != null)
+            for(StudentInfoPO studentInfoPO: studentInfoPOSIsNotChecked) {
+                studentTaskIsNotChecked.add(new StudentInfo(
+                        studentInfoPO.getStudentId(),
+                        studentInfoPO.getName(),
+                        studentInfoPO.getAvatar(),
+                        true
+                ));
         }
 
         List<StudentInfo> studentTaskIsNotFinished = new ArrayList<>();
-        for(StudentInfoPO studentInfoPO: studentInfoPOSIsNotFinished) {
-            studentTaskIsNotFinished.add(new StudentInfo(
-                    studentInfoPO.getStudentId(),
-                    studentInfoPO.getName(),
-                    studentInfoPO.getAvatar(),
-                    true
-            ));
-        }
+        if (studentInfoPOSIsNotFinished != null)
+            for(StudentInfoPO studentInfoPO: studentInfoPOSIsNotFinished) {
+                studentTaskIsNotFinished.add(new StudentInfo(
+                        studentInfoPO.getStudentId(),
+                        studentInfoPO.getName(),
+                        studentInfoPO.getAvatar(),
+                        true
+                ));
+            }
 
         StudentTaskProgressInfo studentTaskProgressInfo = new StudentTaskProgressInfo();
         studentTaskProgressInfo.setTaskId(taskId);

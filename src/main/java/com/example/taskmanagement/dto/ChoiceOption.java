@@ -11,6 +11,15 @@ public class ChoiceOption {
     private Integer sequenceNumber;
     @NotBlank(message = "The content content can not be blank")
     private String content;
+
+    public boolean getIsAnswer() {
+        return isAnswer;
+    }
+
+    public void setIsAnswer(boolean answer) {
+        isAnswer = answer;
+    }
+
     @NotNull(message = "'isAnswer' field is boolean type")
     private boolean isAnswer;
 }

@@ -4,7 +4,7 @@ import com.example.taskmanagement.dto.StudentInfo;
 
 import java.util.List;
 
-public interface IStudentService {
+public interface IMemberService {
 
     List<StudentInfo> getStudentsJoinedOfClassroom(Long classroomId);
     List<StudentInfo> getStudentsToBeJoinedOfClassroom(Long classroomId);

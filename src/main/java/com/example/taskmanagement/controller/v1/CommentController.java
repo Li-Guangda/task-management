@@ -16,6 +16,12 @@ public class CommentController {
 
     private CommentServiceImpl commentServiceImpl;
 
+    /**
+     * 班级成员获取该班所有评论
+     * @param classroomId
+     * @param token
+     * @return
+     */
     @GetMapping("/classroom/{classroomId}/comments")
     @PreAuthorize("@preAuthorizeHelper.isClassroomMember(#classroomId, #token)")
     public Result getCommentsOfClassroom(@PathVariable Long classroomId,
@@ -24,6 +30,13 @@ public class CommentController {
         return new Result("Got all comments of the classroom successfully", commentInfos);
     }
 
+    /**
+     * 班级成员发表评论
+     * @param classroomId
+     * @param newCommentParams
+     * @param token
+     * @return
+     */
     @PostMapping("/classroom/{classroomId}/comment")
     @PreAuthorize("@preAuthorizeHelper.isClassroomMember(#classroomId, #token)")
     public Result newCommentToClassroom(@PathVariable Long classroomId,

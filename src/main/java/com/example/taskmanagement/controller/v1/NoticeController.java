@@ -17,6 +17,13 @@ public class NoticeController {
 
     private NoticeServiceImpl noticeServiceImpl;
 
+    /**
+     * 教师发布新公告
+     * @param classroomId
+     * @param newNoticeParams
+     * @param token
+     * @return
+     */
     @PostMapping("/classroom/{classroomId}/notice")
     @PreAuthorize("@preAuthorizeHelper.isClassroomLecturer(#classroomId, #token)")
     public Result newNoticeToClassroom(@PathVariable Long classroomId,
@@ -26,6 +33,13 @@ public class NoticeController {
         return Result.onlyMessage("Published a new notice successfully");
     }
 
+    /**
+     * 教师删除公告
+     * @param classroomId
+     * @param noticeId
+     * @param token
+     * @return
+     */
     @DeleteMapping("/classroom/{classroomId}/notices/{noticeId}")
     @PreAuthorize("@preAuthorizeHelper.isClassroomLecturer(#classroomId, #token)")
     public Result deleteNoticeFromClassroom(@PathVariable Long classroomId,
@@ -35,6 +49,14 @@ public class NoticeController {
         return Result.onlyMessage("Deleted the notice successfully");
     }
 
+    /**
+     * 教师编辑公告
+     * @param classroomId
+     * @param noticeId
+     * @param editNoticeParams
+     * @param token
+     * @return
+     */
     @PutMapping("/classroom/{classroomId}/notices/{noticeId}")
     @PreAuthorize("@preAuthorizeHelper.isClassroomLecturer(#classroomId, #token)")
     public Result editNoticeOfClassroom(@PathVariable Long classroomId,
@@ -45,6 +67,12 @@ public class NoticeController {
         return Result.onlyMessage("Update the notice successfully");
     }
 
+    /**
+     * 班级成员获取当前班级公告
+     * @param classroomId
+     * @param token
+     * @return
+     */
     @GetMapping("/classroom/{classroomId}/notices")
     @PreAuthorize("@preAuthorizeHelper.isClassroomLecturer(#classroomId, #token) or" +
                     "@preAuthorizeHelper.isClassroomStudent(#classroomId, #token)")

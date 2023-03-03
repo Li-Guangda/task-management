@@ -25,6 +25,12 @@ public class CommentServiceImpl implements ICommentService {
     private StudentInfoMapper studentInfoMapper;
     private LecturerInfoMapper lecturerInfoMapper;
 
+    /**
+     * 班级成员获取班级评论
+     * @param classroomId
+     * @return
+     */
+
     public List<CommentInfo> getCommentsOfClassroom(Long classroomId) {
         QueryWrapper<CommentPO> commentPOQueryWrapper = new QueryWrapper<>();
         commentPOQueryWrapper.eq("classroom_id", classroomId);
@@ -64,13 +70,18 @@ public class CommentServiceImpl implements ICommentService {
             ));
         }
 
-        return null;
+        return commentInfos;
     }
 
+    /**
+     * 班级成员发布评论
+     * @param newCommentParams
+     */
     @Override
     public void newCommentToClassroom(NewCommentParams newCommentParams) {
         CommentPO commentPO = new CommentPO();
         commentPO.setClassroomId(newCommentParams.getClassId());
+        commentPO.setUserId(newCommentParams.getUserId());
         commentPO.setContent(newCommentParams.getContent());
         commentMapper.insert(commentPO);
     }

@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class ShortQuestion {
-    private Integer number;
+    private Integer sequenceNumber;
     private String title;
     private Integer score;
 }
