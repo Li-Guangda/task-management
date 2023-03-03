@@ -8,8 +8,10 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -39,7 +41,6 @@ public class WebSecurityConfig {
 
     @Value("${jwt.private.key}")
     RSAPrivateKey privateKey;
-    private UserDetailsServiceImpl userDetailsServiceImpl;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
@@ -78,7 +79,7 @@ public class WebSecurityConfig {
                         (authorize) -> authorize
                                 .requestMatchers(
                                     "/test/api/v1/nothing",
-                                        "/api/v1/token",
+                                        "/api/v1/user/token",
                                         "/api/v1/user"
                                 ).permitAll()
                                 .anyRequest().authenticated()
@@ -91,10 +92,5 @@ public class WebSecurityConfig {
                         .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
                 );
         return httpSecurity.build();
-    }
-
-    @Autowired
-    public void setUserDetailsServiceImpl(UserDetailsServiceImpl userDetailsServiceImpl) {
-        this.userDetailsServiceImpl = userDetailsServiceImpl;
     }
 }

@@ -1,16 +1,16 @@
 package com.example.taskmanagement.service;
 
-import com.example.taskmanagement.model.Notice;
 
-import java.util.Date;
+import com.example.taskmanagement.dto.EditNoticeParams;
+import com.example.taskmanagement.dto.NewNoticeParams;
+import com.example.taskmanagement.dto.NoticeInfo;
+
 import java.util.List;
 
 public interface INoticeService {
 
-    Integer addNotice(Notice notice);
-    Integer deleteAllNotices();
-    Integer deleteNotice(Long noticeId);
-    Integer updateNotice(Notice notice);
-    List<Notice> getAllNoticesOfClassroom(Long classId);
-    Notice getNotice(Long noticeId);
+    void newNoticeToClassroom(NewNoticeParams newNoticeParams);
+    void deleteNoticeFromClassroom(Long noticeId);
+    void editNoticeOfClassroom(EditNoticeParams editNoticeParams);
+    List<NoticeInfo> getNoticesOfClassroom(Long classroomId);
 }

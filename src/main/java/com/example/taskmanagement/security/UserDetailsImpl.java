@@ -1,6 +1,6 @@
 package com.example.taskmanagement.security;
 
-import com.example.taskmanagement.model.User;
+import com.example.taskmanagement.po.UserPO;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,12 +21,12 @@ public class UserDetailsImpl implements UserDetails {
         this.authorities = authorities;
     }
 
-    public static UserDetailsImpl build(User user) {
-        List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-        authorities.add(new SimpleGrantedAuthority(user.getRole()));
+    public static UserDetailsImpl build(UserPO userPO) {
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority(userPO.getRole()));
         var userdetailsImpl = new UserDetailsImpl(
-                user.getUsername(),
-                user.getPassword(),
+                userPO.getUsername(),
+                userPO.getPassword(),
                 authorities
         );
         return userdetailsImpl;

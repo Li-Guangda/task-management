@@ -1,25 +1,48 @@
 package com.example.taskmanagement.service;
 
-import com.example.taskmanagement.model.LecturerInfo;
-import com.example.taskmanagement.model.StudentInfo;
-import com.example.taskmanagement.model.User;
-
-import java.util.List;
+import com.example.taskmanagement.dto.LecturerDetailedInfo;
+import com.example.taskmanagement.dto.LogInParams;
+import com.example.taskmanagement.dto.SignUpParams;
+import com.example.taskmanagement.dto.StudentDetailedInfo;
 
 public interface IUserService {
-    boolean signUp(String username, String password, String role);
-    String logIn(String username, String password);
-    StudentInfo getStudentInfo(Long userId);
-    LecturerInfo getLecturerInfo(Long userId);
-    List<User> getAllUsers();
-    User getUser(Long userId);
-    Integer addStudentInfo(StudentInfo studentInfo);
-    Integer addLecturerInfo(LecturerInfo lecturerInfo);
-    Integer deleteAllUsers();
-    Integer deleteUser(Long userId);
-    Integer deleteStudentInfo(Long userId);
-    Integer deleteLecturerInfo(Long userId);
-    Integer updateUser(Long userId, User user);
-    Integer updateStudentInfo(Long userId, StudentInfo studentInfo);
-    Integer updateLecturerInfo(Long userId, LecturerInfo lecturerInfo);
+    /**
+     * 注册
+     * @param signUpParams
+     * @return
+     */
+    void signUp(SignUpParams signUpParams);
+
+    /**
+     * 登录
+     * @param logInParams
+     * @return
+     */
+    String logIn(LogInParams logInParams);
+
+    /**
+     * 获取学生详细信息
+     * @param userId
+     * @return
+     */
+    StudentDetailedInfo getStudentInfo(Long userId);
+
+    /**
+     * 获取教师详细信息
+     * @param userId
+     * @return
+     */
+    LecturerDetailedInfo getLecturerInfo(Long userId);
+
+    /**
+     * 更新学生详细信息
+     * @param studentDetailedInfo
+     */
+    void updateStudentInfo(StudentDetailedInfo studentDetailedInfo);
+
+    /**
+     * 更新教师详细信息
+     * @param lecturerDetailedInfo
+     */
+    void updateLecturerInfo(LecturerDetailedInfo lecturerDetailedInfo);
 }

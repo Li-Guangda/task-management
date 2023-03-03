@@ -1,6 +1,6 @@
 package com.example.taskmanagement.controller.v1;
 
-import com.example.taskmanagement.controller.response.Result;
+import com.example.taskmanagement.dto.Result;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;

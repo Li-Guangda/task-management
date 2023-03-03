@@ -1,13 +1,17 @@
 package com.example.taskmanagement.security;
 
-import com.example.taskmanagement.mapper.UserMapper;
-import com.example.taskmanagement.model.User;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.taskmanagement.dao.UserMapper;
+import com.example.taskmanagement.po.UserPO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Service
@@ -18,8 +22,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userMapper.getUserByUsername(username);
-        return UserDetailsImpl.build(user);
+        QueryWrapper<UserPO> userPOQueryWrapper = new QueryWrapper<>();
+        userPOQueryWrapper.eq("username", username);
+        UserPO userPO = userMapper.selectOne(userPOQueryWrapper);
+        return UserDetailsImpl.build(userPO);
     }
 
     @Autowired

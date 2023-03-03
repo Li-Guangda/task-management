@@ -1,21 +1,20 @@
 package com.example.taskmanagement.service;
 
-import com.example.taskmanagement.model.StudentTask;
-import com.example.taskmanagement.model.Task;
 
-import java.util.List;
+import com.example.taskmanagement.dto.NewTaskParams;
+import com.example.taskmanagement.dto.RemarkParams;
+import com.example.taskmanagement.dto.StudentAnswerParams;
+import com.example.taskmanagement.dto.StudentTaskProgressInfo;
+import com.example.taskmanagement.dto.ClassroomTaskInfo;
+import com.example.taskmanagement.dto.StudentTaskInfo;
 
 public interface ITaskService {
 
-    Integer addTask(Task task);
-    Integer addStudentTask(StudentTask studentTask);
-    Integer deleteAllTasksOfClass(Long classId);
-    Integer deleteTask(Long taskId);
-    Integer deleteStudentTask(Long studentId, Long taskId);
-    Integer updateTask(Task task);
-    Integer updateStudentTask(StudentTask studentTask);
-    List<Task> getAllTaskOfClass(Long classId);
-    Task getTask(Long taskId);
-    List<StudentTask> getAllStudentTaskOfClass(Long studentId, Long taskId);
-    StudentTask getStudentTask(Long studentId, Long taskId);
+    void newTask(NewTaskParams requestBody);
+    void submitStudentTask(StudentAnswerParams requestBody);
+    void remarkStudentTask(RemarkParams requestBody);
+    ClassroomTaskInfo getTasksOfClassroom(Long classId);
+    StudentTaskProgressInfo getAllStudentProgressOfTask(Long classId);
+    StudentTaskInfo getStudentTask(Long classId, Long studentId);
+    void deleteTask(Long taskId);
 }
