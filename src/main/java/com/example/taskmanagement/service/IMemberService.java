@@ -1,13 +1,12 @@
 package com.example.taskmanagement.service;
 
-import com.example.taskmanagement.dto.StudentInfo;
+import com.example.taskmanagement.dto.StudentInfos;
 
-import java.util.List;
 
 public interface IMemberService {
 
-    List<StudentInfo> getStudentsJoinedOfClassroom(Long classroomId);
-    List<StudentInfo> getStudentsToBeJoinedOfClassroom(Long classroomId);
+    StudentInfos getStudentsJoinedOfClassroom(Long classroomId);
+    StudentInfos getStudentsToBeJoinedOfClassroom(Long classroomId);
     void deleteStudentFromClassroom(Long classroomId, Long studentId);
     void acceptStudent(Long classroomId, Long studentId);
 }

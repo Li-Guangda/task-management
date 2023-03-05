@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.taskmanagement.dao.ClassroomStudentMapper;
 import com.example.taskmanagement.dao.StudentInfoMapper;
 import com.example.taskmanagement.dto.StudentInfo;
+import com.example.taskmanagement.dto.StudentInfos;
 import com.example.taskmanagement.po.ClassroomStudentPO;
 import com.example.taskmanagement.po.StudentInfoPO;
 import com.example.taskmanagement.service.IMemberService;
@@ -31,7 +32,7 @@ public class MemberServiceImpl implements IMemberService {
      */
     @Override
     @Transactional
-    public List<StudentInfo> getStudentsJoinedOfClassroom(Long classroomId) {
+    public StudentInfos getStudentsJoinedOfClassroom(Long classroomId) {
         QueryWrapper<ClassroomStudentPO> classroomStudentPOQueryWrapper = new QueryWrapper<>();
 
         classroomStudentPOQueryWrapper.eq("classroom_id", classroomId);
@@ -58,7 +59,7 @@ public class MemberServiceImpl implements IMemberService {
                     true
             ));
         }
-        return studentInfos;
+        return new StudentInfos(studentInfos);
     }
 
     /**
@@ -68,7 +69,7 @@ public class MemberServiceImpl implements IMemberService {
      */
     @Override
     @Transactional
-    public List<StudentInfo> getStudentsToBeJoinedOfClassroom(Long classroomId) {
+    public StudentInfos getStudentsToBeJoinedOfClassroom(Long classroomId) {
         QueryWrapper<ClassroomStudentPO> classroomStudentPOQueryWrapper = new QueryWrapper<>();
 
         classroomStudentPOQueryWrapper.eq("classroom_id", classroomId);
@@ -95,7 +96,7 @@ public class MemberServiceImpl implements IMemberService {
                     false
             ));
         }
-        return studentInfos;
+        return new StudentInfos(studentInfos);
     }
 
     /**
@@ -111,12 +112,6 @@ public class MemberServiceImpl implements IMemberService {
         classroomStudentPOQueryWrapper.eq("classroom_id", classroomId);
         if (!classroomStudentMapper.exists(classroomStudentPOQueryWrapper))
             throw new ClassroomNotFoundException();
-
-        classroomStudentPOQueryWrapper.clear();
-
-        classroomStudentPOQueryWrapper.eq("student_id", studentId);
-        if (!classroomStudentMapper.exists(classroomStudentPOQueryWrapper))
-            throw new UserNotFoundException();
 
         classroomStudentPOQueryWrapper.clear();
 
@@ -143,17 +138,15 @@ public class MemberServiceImpl implements IMemberService {
 
         classroomStudentPOQueryWrapper.clear();
 
-        classroomStudentPOQueryWrapper.eq("student_id", studentId);
-        if (!classroomStudentMapper.exists(classroomStudentPOQueryWrapper))
-            throw new UserNotFoundException();
-
-        classroomStudentPOQueryWrapper.clear();
-
         classroomStudentPOQueryWrapper.eq("classroom_id", classroomId).eq("student_id", studentId).eq("joined", true);
         if (classroomStudentMapper.exists(classroomStudentPOQueryWrapper))
             throw new StudentAlreadyInClassroomException();
 
         classroomStudentPOQueryWrapper.clear();
+
+        classroomStudentPOQueryWrapper.eq("classroom_id", classroomId).eq("student_id", studentId);
+        if (!classroomStudentMapper.exists(classroomStudentPOQueryWrapper))
+            throw new StudentNotInClassroomException();
 
         classroomStudentPOQueryWrapper.eq("classroom_id", classroomId).eq("student_id", studentId);
         ClassroomStudentPO classroomStudentPO = new ClassroomStudentPO(classroomId, studentId, true);

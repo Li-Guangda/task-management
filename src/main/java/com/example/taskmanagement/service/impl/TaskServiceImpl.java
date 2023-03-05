@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,32 +28,42 @@ public class TaskServiceImpl implements ITaskService {
     private ClassroomStudentMapper classroomStudentMapper;
     private ShortAnswerQuestionMapper shortAnswerQuestionMapper;
 
+    /**
+     * 发布作业
+     * @param newTaskParams
+     */
     @Override
     @Transactional
     public void newTask(NewTaskParams newTaskParams) {
-        TaskPO taskPO = new TaskPO();
-        taskPO.setClassroomId(newTaskParams.getClassroomId());
-        taskPO.setTaskTitle(newTaskParams.getTaskTitle());
-        taskPO.setTaskDesc(newTaskParams.getTaskDesc());
-        taskPO.setDateStart(newTaskParams.getDateStart());
-        taskPO.setDateEnd(newTaskParams.getDateEnd());
+        TaskPO taskPO = new TaskPO(
+            null,
+                newTaskParams.getClassroomId(),
+                newTaskParams.getTaskTitle(),
+                newTaskParams.getTaskDesc(),
+                newTaskParams.getDateStart(),
+                newTaskParams.getDateEnd()
+        );
         taskMapper.insert(taskPO);
 
         // 添加选择题
         for (ChoiceQuestion choiceQuestion: newTaskParams.getChoiceQuestions()) {
-            ChoiceQuestionPO choiceQuestionPO = new ChoiceQuestionPO();
-            choiceQuestionPO.setTaskId(taskPO.getTaskId());
-            choiceQuestionPO.setSequenceNumber(choiceQuestion.getSequenceNumber());
-            choiceQuestionPO.setTitle(choiceQuestion.getTitle());
-            choiceQuestionPO.setType(choiceQuestion.getType());
-            choiceQuestionPO.setScore(choiceQuestion.getScore());
+            ChoiceQuestionPO choiceQuestionPO = new ChoiceQuestionPO(
+                   null,
+                    taskPO.getTaskId(),
+                    choiceQuestion.getSequenceNumber(),
+                    choiceQuestion.getTitle(),
+                    choiceQuestion.getType(),
+                    choiceQuestion.getScore()
+            );
             choiceQuestionMapper.insert(choiceQuestionPO);
 
             for (ChoiceOption choiceOption: choiceQuestion.getOptions()) {
-                QuestionOptionPO questionOptionPO = new QuestionOptionPO();
-                questionOptionPO.setChoiceQuestionId(choiceQuestionPO.getChoiceQuestionId());
-                questionOptionPO.setSequenceNumber(choiceOption.getSequenceNumber());
-                questionOptionPO.setContent(choiceOption.getContent());
+                QuestionOptionPO questionOptionPO = new QuestionOptionPO(
+                    null,
+                        choiceQuestionPO.getChoiceQuestionId(),
+                        choiceOption.getSequenceNumber(),
+                        choiceOption.getContent()
+                );
                 questionOptionMapper.insert(questionOptionPO);
 
                 ChoiceQuestionAnswerPO choiceQuestionAnswerPO = new ChoiceQuestionAnswerPO();
@@ -66,18 +77,24 @@ public class TaskServiceImpl implements ITaskService {
 
         // 添加简答题
         for (ShortQuestion shortQuestion: newTaskParams.getShortQuestions()) {
-            ShortAnswerQuestionPO shortAnswerQuestionPO = new ShortAnswerQuestionPO();
-            shortAnswerQuestionPO.setTaskId(taskPO.getTaskId());
-            shortAnswerQuestionPO.setSequenceNumber(shortQuestion.getSequenceNumber());
-            shortAnswerQuestionPO.setTitle(shortQuestion.getTitle());
-            shortAnswerQuestionPO.setScore(shortQuestion.getScore());
+            ShortAnswerQuestionPO shortAnswerQuestionPO = new ShortAnswerQuestionPO(
+                null,
+                    taskPO.getTaskId(),
+                    shortQuestion.getSequenceNumber(),
+                    shortQuestion.getTitle(),
+                    shortQuestion.getScore()
+            );
             shortAnswerQuestionMapper.insert(shortAnswerQuestionPO);
         }
     }
 
+    /**
+     * 学生提交作答内容
+     * @param studentAnswerParams
+     */
     @Override
     @Transactional
-    public void submitStudentTask(StudentAnswerParams studentAnswerParams) {
+    public void submitStudentAnswer(StudentAnswerParams studentAnswerParams) {
         for(Long questionOptionId: studentAnswerParams.getQuestionOptionIds()) {
             StudentChoicePO studentChoicePO = new StudentChoicePO();
             studentChoicePO.setStudentId(studentAnswerParams.getStudentId());
@@ -100,6 +117,10 @@ public class TaskServiceImpl implements ITaskService {
         studentTaskMapper.insert(studentTaskPO);
     }
 
+    /**
+     * 教师批阅学生作业
+     * @param remarkParams
+     */
     @Override
     @Transactional
     public void remarkStudentTask(RemarkParams remarkParams) {
@@ -121,108 +142,211 @@ public class TaskServiceImpl implements ITaskService {
         }
     }
 
+    /**
+     * 获取班级作业概要
+     * @param classId
+     * @return
+     */
     @Override
     @Transactional
     public ClassroomTaskInfo getTasksOfClassroom(Long classId) {
-        QueryWrapper<TaskPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("classroom_id", classId);
-        List<TaskPO> taskPOS = taskMapper.selectList(queryWrapper);
+        QueryWrapper<TaskPO> taskPOQueryWrapper = new QueryWrapper<>();
+        taskPOQueryWrapper.eq("classroom_id", classId);
+        List<TaskPO> taskPOS = taskMapper.selectList(taskPOQueryWrapper);
 
+        QueryWrapper<StudentTaskPO> studentTaskPOQueryWrapper = new QueryWrapper<>();
         List<TaskInfo> taskInfos = new ArrayList<>();
         for (TaskPO taskPO: taskPOS) {
+            studentTaskPOQueryWrapper.clear();
+            studentTaskPOQueryWrapper.eq("task_id", taskPO.getTaskId());
+            Integer studentSubmittedCount = studentTaskMapper.selectCount(studentTaskPOQueryWrapper).intValue();
+
             taskInfos.add(new TaskInfo(
                     taskPO.getTaskId(),
                     taskPO.getClassroomId(),
                     taskPO.getTaskTitle(),
                     taskPO.getTaskDesc(),
                     taskPO.getDateStart(),
-                    taskPO.getDateEnd()
+                    taskPO.getDateEnd(),
+                    studentSubmittedCount
             ));
         }
         ClassroomTaskInfo classroomTaskInfo = new ClassroomTaskInfo();
-        classroomTaskInfo.setTasks(taskInfos);
+        classroomTaskInfo.setTaskInfos(taskInfos);
         return classroomTaskInfo;
     }
 
     @Override
     @Transactional
-    public StudentTaskProgressInfo getAllStudentProgressOfTask(Long taskId) {
+    public QuestionAnswer getTaskAnswers(Long taskId, Long studentId) {
+        Integer totalScore = 0;
+        QueryWrapper<ChoiceQuestionPO> choiceQuestionPOQueryWrapper = new QueryWrapper<>();
+        choiceQuestionPOQueryWrapper.eq("task_id", taskId);
+        List<ChoiceQuestionPO> choiceQuestionPOS = choiceQuestionMapper.selectList(choiceQuestionPOQueryWrapper);
+
+        // 查询该作业的所有选择题
+        List<ChoiceQuestionAnswer> choiceQuestionAnswers = new ArrayList<>();
+        for (ChoiceQuestionPO choiceQuestionPO: choiceQuestionPOS) {
+            // 查询该选择题的正确选项
+            String rightAnswer = getRightAnswerOfChoiceQuestion(choiceQuestionPO.getChoiceQuestionId());
+
+            // 查询学生的作答选项
+            String studentAnswer = getStudentAnswerOfChoiceQuestion(
+                choiceQuestionPO.getChoiceQuestionId(),
+                studentId
+            );
+
+            Integer score = rightAnswer.equals(studentAnswer) ? choiceQuestionPO.getScore() : 0;
+            totalScore += score;
+
+            choiceQuestionAnswers.add(new ChoiceQuestionAnswer(
+                    choiceQuestionPO.getChoiceQuestionId(),
+                    choiceQuestionPO.getSequenceNumber(),
+                    choiceQuestionPO.getType(),
+                    rightAnswer,
+                    studentAnswer,
+                    score,
+                    getChoiceQuestionAccuracyOfClassroom(choiceQuestionPO.getChoiceQuestionId())
+            ));
+        }
+
+        // 查询该作业的所有简答题
+        QueryWrapper<ShortAnswerQuestionPO> shortAnswerQuestionPOQueryWrapper = new QueryWrapper<>();
+        shortAnswerQuestionPOQueryWrapper.eq("task_id", taskId);
+        List<ShortAnswerQuestionPO> shortAnswerQuestionPOS = shortAnswerQuestionMapper.selectList(shortAnswerQuestionPOQueryWrapper);
+        QueryWrapper<StudentShortAnswerPO> studentShortAnswerPOQueryWrapper = new QueryWrapper<>();
+        List<ShortQuestionScore> shortQuestionScores = new ArrayList<>();
+        for (ShortAnswerQuestionPO shortAnswerQuestionPO: shortAnswerQuestionPOS) {
+            studentShortAnswerPOQueryWrapper.clear();
+            studentShortAnswerPOQueryWrapper.eq("short_answer_question_id", shortAnswerQuestionPO.getShortAnswerQuestionId())
+                    .eq("student_id", studentId);
+            StudentShortAnswerPO studentShortAnswerPO = studentShortAnswerMapper.selectOne(studentShortAnswerPOQueryWrapper);
+            shortQuestionScores.add(new ShortQuestionScore(
+                    studentShortAnswerPO.getShortAnswerQuestionId(),
+                    studentShortAnswerPO.getScore()
+            ));
+            totalScore += studentShortAnswerPO.getScore();
+        }
+
+        return new QuestionAnswer(
+                taskId,
+                studentId,
+                totalScore,
+                choiceQuestionAnswers,
+                shortQuestionScores
+        );
+    }
+
+    @Override
+    public String getChoiceQuestionAccuracyOfClassroom(Long choiceQuestionId) {
+        ChoiceQuestionPO choiceQuestionPO = choiceQuestionMapper.selectById(choiceQuestionId);
+
+        QueryWrapper<StudentTaskPO> studentTaskPOQueryWrapper = new QueryWrapper<>();
+        studentTaskPOQueryWrapper.eq("task_id", choiceQuestionPO.getTaskId());
+        List<StudentTaskPO> studentTaskPOS = studentTaskMapper.selectList(studentTaskPOQueryWrapper);
+
+        String rightAnswer = getRightAnswerOfChoiceQuestion(choiceQuestionId);
+        Integer submitted = 0, right = 0;
+        for (StudentTaskPO studentTaskPO: studentTaskPOS) {
+            String studentAnswer = getStudentAnswerOfChoiceQuestion(choiceQuestionId, studentTaskPO.getStudentId());
+            if (rightAnswer.equals(studentAnswer))
+                right++;
+            submitted++;
+        }
+        DecimalFormat decimalFormat = new DecimalFormat("0.00%");
+        return decimalFormat.format(right.doubleValue() / submitted.doubleValue());
+    }
+
+    @Override
+    public String getRightAnswerOfChoiceQuestion(Long choiceQuestionId) {
+        QueryWrapper<ChoiceQuestionAnswerPO> choiceQuestionAnswerPOQueryWrapper = new QueryWrapper<>();
+        choiceQuestionAnswerPOQueryWrapper.eq("choice_question_id", choiceQuestionId);
+        List<ChoiceQuestionAnswerPO> choiceQuestionAnswerPOS = choiceQuestionAnswerMapper.selectList(choiceQuestionAnswerPOQueryWrapper);
+        List<Long> choiceOptionIds = new ArrayList<>();
+        for (ChoiceQuestionAnswerPO choiceQuestionAnswerPO: choiceQuestionAnswerPOS) {
+            choiceOptionIds.add(choiceQuestionAnswerPO.getQuestionOptionId());
+        }
+        QueryWrapper<QuestionOptionPO> questionOptionPOQueryWrapper = new QueryWrapper<>();
+        questionOptionPOQueryWrapper.orderByAsc("sequence_number");
+        List<QuestionOptionPO> questionOptionPOS = choiceOptionIds == null ? null : questionOptionMapper.selectBatchIds(choiceOptionIds);
+        String rightAnswer = "";
+        for (QuestionOptionPO questionOptionPO: questionOptionPOS) {
+            rightAnswer += (char) ('A' + questionOptionPO.getSequenceNumber() - 1);
+        }
+        return rightAnswer;
+    }
+
+    @Override
+    public String getStudentAnswerOfChoiceQuestion(Long choiceQuestionId, Long studentId) {
+        List<Integer> studentChoiceSequenceNumbers = studentChoiceMapper.selectStudentOptionSequenceNumbersByChoiceQuestionId(
+                choiceQuestionId,
+                studentId
+        );
+        String studentAnswer = "";
+        for (Integer studentChoiceSequenceNumber: studentChoiceSequenceNumbers) {
+            studentAnswer += (char) ('A' + studentChoiceSequenceNumber - 1);
+        }
+        return studentAnswer;
+    }
+
+    /**
+     * 获取该作业下的学生情况概要
+     * @param taskId
+     * @return
+     */
+    @Override
+    @Transactional
+    public StudentTaskProgressInfos getStudentsOfTask(Long taskId) {
         TaskPO taskPO = taskMapper.selectById(taskId);
 
         QueryWrapper<ClassroomStudentPO> classroomStudentPOQueryWrapper = new QueryWrapper<>();
         classroomStudentPOQueryWrapper.eq("classroom_id", taskPO.getClassroomId()).eq("joined", true);
         List<ClassroomStudentPO> classroomStudentPOS = classroomStudentMapper.selectList(classroomStudentPOQueryWrapper);
 
-        List<Long> studenIdsAll = new ArrayList<>();
+        List<Long> studentIds = new ArrayList<>();
         for (ClassroomStudentPO classroomStudentPO: classroomStudentPOS) {
-            studenIdsAll.add(classroomStudentPO.getStudentId());
+            studentIds.add(classroomStudentPO.getStudentId());
         }
 
+        List<StudentInfoPO> studentInfoPOS = studentIds == null ? null :
+                studentInfoMapper.selectBatchIds(studentIds);
+
+        List<StudentTaskProgressInfo> studentTaskProgressInfos = new ArrayList<>();
         QueryWrapper<StudentTaskPO> studentTaskPOQueryWrapper = new QueryWrapper<>();
-        studentTaskPOQueryWrapper.eq("task_id", taskId);
-        List<StudentTaskPO> studentTaskPOS = studentTaskMapper.selectList(studentTaskPOQueryWrapper);
+        for (StudentInfoPO studentInfoPO: studentInfoPOS) {
+            StudentTaskProgressInfo studentTaskProgressInfo = new StudentTaskProgressInfo(
+                    taskId,
+                    studentInfoPO.getStudentId(),
+                    studentInfoPO.getStudentNumber(),
+                    studentInfoPO.getAvatar(),
+                    null
+            );
 
-        List<Long> studentIdsIsChecked = new ArrayList<>();
-        List<Long> studentIdsIsNotChecked = new ArrayList<>();
-        for (StudentTaskPO studentTaskPO: studentTaskPOS) {
-            if (studentTaskPO.isChecked())
-                studentIdsIsChecked.add(studentTaskPO.getStudentId());
-            else
-                studentIdsIsNotChecked.add(studentTaskPO.getStudentId());
+            studentTaskPOQueryWrapper.clear();
+            studentTaskPOQueryWrapper.eq("task_id", taskId).eq("student_id", studentInfoPO.getStudentId());
+            if (studentTaskMapper.exists(studentTaskPOQueryWrapper)) {
+                StudentTaskPO studentTaskPO = studentTaskMapper.selectOne(studentTaskPOQueryWrapper);
+                if (studentTaskPO.isChecked())
+                    studentTaskProgressInfo.setTaskStatus("CHECKED");
+                else
+                    studentTaskProgressInfo.setTaskStatus("NOT_CHECKED");
+            } else {
+                studentTaskProgressInfo.setTaskStatus("NOT_SUBMITTED");
+            }
+            studentTaskProgressInfos.add(studentTaskProgressInfo);
         }
 
-        studenIdsAll.removeAll(studentIdsIsChecked);
-        studenIdsAll.removeAll(studentIdsIsNotChecked);
-        List<Long> studentIdsIsNotFinished = studenIdsAll;
-
-        List<StudentInfoPO> studentInfoPOSIsNotFinished = (studentIdsIsNotFinished.size() == 0) ? null : studentInfoMapper.selectBatchIds(studentIdsIsNotFinished);
-        List<StudentInfoPO> studentInfoPOSIsNotChecked = (studentIdsIsNotChecked.size() == 0) ? null : studentInfoMapper.selectBatchIds(studentIdsIsNotChecked);
-        List<StudentInfoPO> studentTaskPOSIsChecked = (studentIdsIsChecked.size() == 0) ? null : studentInfoMapper.selectBatchIds(studentIdsIsChecked);
-
-        List<StudentInfo> studentTaskIsChecked = new ArrayList<>();
-        if (studentTaskPOSIsChecked != null)
-            for(StudentInfoPO studentInfoPO: studentTaskPOSIsChecked) {
-                studentTaskIsChecked.add(new StudentInfo(
-                        studentInfoPO.getStudentId(),
-                        studentInfoPO.getName(),
-                        studentInfoPO.getAvatar(),
-                        true
-                ));
-            }
-
-        List<StudentInfo> studentTaskIsNotChecked = new ArrayList<>();
-        if (studentInfoPOSIsNotChecked != null)
-            for(StudentInfoPO studentInfoPO: studentInfoPOSIsNotChecked) {
-                studentTaskIsNotChecked.add(new StudentInfo(
-                        studentInfoPO.getStudentId(),
-                        studentInfoPO.getName(),
-                        studentInfoPO.getAvatar(),
-                        true
-                ));
-        }
-
-        List<StudentInfo> studentTaskIsNotFinished = new ArrayList<>();
-        if (studentInfoPOSIsNotFinished != null)
-            for(StudentInfoPO studentInfoPO: studentInfoPOSIsNotFinished) {
-                studentTaskIsNotFinished.add(new StudentInfo(
-                        studentInfoPO.getStudentId(),
-                        studentInfoPO.getName(),
-                        studentInfoPO.getAvatar(),
-                        true
-                ));
-            }
-
-        StudentTaskProgressInfo studentTaskProgressInfo = new StudentTaskProgressInfo();
-        studentTaskProgressInfo.setTaskId(taskId);
-        studentTaskProgressInfo.setStudentTaskIsChecked(studentTaskIsChecked);
-        studentTaskProgressInfo.setStudentTaskIsNotChecked(studentTaskIsNotChecked);
-        studentTaskProgressInfo.setStudentTaskIsNotFinished(studentTaskIsNotFinished);
-
-        return studentTaskProgressInfo;
+        return new StudentTaskProgressInfos(studentTaskProgressInfos);
     }
 
+    /**
+     * 获取学生作业作答内容
+     * @param taskId
+     * @param studentId
+     * @return
+     */
     @Override
-    public StudentTaskInfo getStudentTask(Long taskId, Long studentId) {
+    public StudentTaskInfo getStudentAnswer(Long taskId, Long studentId) {
         List<StudentChoicePO> studentChoicePOSOfTask = studentChoiceMapper.selectByTaskId(taskId);
         List<Long> questionOptionIds = new ArrayList<>();
         for (StudentChoicePO studentChoicePO: studentChoicePOSOfTask) {
@@ -245,6 +369,68 @@ public class TaskServiceImpl implements ITaskService {
         return studentTaskInfo;
     }
 
+    /**
+     * 获取作业内容
+     * @param taskId
+     * @return
+     */
+    @Override
+    public TaskContent getTaskContent(Long taskId) {
+
+        QueryWrapper<ChoiceQuestionPO> choiceQuestionQueryWrapper = new QueryWrapper<>();
+        choiceQuestionQueryWrapper.eq("task_id", taskId);
+        List<ChoiceQuestionPO> choiceQuestionPOS = choiceQuestionMapper.selectList(choiceQuestionQueryWrapper);
+
+        // 选择题
+        List<ChoiceQuestion> choiceQuestions = new ArrayList<>();
+        for (ChoiceQuestionPO choiceQuestionPO: choiceQuestionPOS) {
+            ChoiceQuestion choiceQuestion = new ChoiceQuestion(
+                    choiceQuestionPO.getChoiceQuestionId(),
+                    choiceQuestionPO.getSequenceNumber(),
+                    choiceQuestionPO.getTitle(),
+                    choiceQuestionPO.getType(),
+                    choiceQuestionPO.getScore(),
+                    null
+            );
+            QueryWrapper<QuestionOptionPO> questionOptionPOQueryWrapper = new QueryWrapper<>();
+            questionOptionPOQueryWrapper.eq("choice_question_id", choiceQuestionPO.getChoiceQuestionId());
+            List<QuestionOptionPO> questionOptionPOS = questionOptionMapper.selectList(questionOptionPOQueryWrapper);
+
+            List<ChoiceOption> choiceOptions = new ArrayList<>();
+            for (QuestionOptionPO questionOptionPO: questionOptionPOS) {
+                choiceOptions.add(new ChoiceOption(
+                        questionOptionPO.getQuestionOptionId(),
+                        questionOptionPO.getSequenceNumber(),
+                        questionOptionPO.getContent(),
+                        false
+                ));
+            }
+            choiceQuestion.setOptions(choiceOptions);
+            choiceQuestions.add(choiceQuestion);
+        }
+
+        // 简答题
+        QueryWrapper<ShortAnswerQuestionPO> shortAnswerQuestionPOQueryWrapper = new QueryWrapper<>();
+        shortAnswerQuestionPOQueryWrapper.eq("task_id", taskId);
+        List<ShortAnswerQuestionPO> shortAnswerQuestionPOS = shortAnswerQuestionMapper.selectList(shortAnswerQuestionPOQueryWrapper);
+
+        List<ShortQuestion> shortQuestions = new ArrayList<>();
+        for (ShortAnswerQuestionPO shortAnswerQuestionPO: shortAnswerQuestionPOS) {
+            shortQuestions.add(new ShortQuestion(
+                    shortAnswerQuestionPO.getShortAnswerQuestionId(),
+                    shortAnswerQuestionPO.getSequenceNumber(),
+                    shortAnswerQuestionPO.getTitle(),
+                    shortAnswerQuestionPO.getScore()
+            ));
+        }
+
+        return new TaskContent(taskId, choiceQuestions, shortQuestions);
+    }
+
+    /**
+     * 删除作业
+     * @param taskId
+     */
     @Override
     public void deleteTask(Long taskId) {
         taskMapper.deleteById(taskId);

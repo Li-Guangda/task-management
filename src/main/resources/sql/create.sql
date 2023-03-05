@@ -49,7 +49,7 @@ drop table if exists `student_task`;
 create table `student_task` (
     `task_id` bigint(20) comment '作业id',
     `student_id` bigint(20) comment '学生id',
-    `remark` varchar(1024) comment '教师评语',
+    `remark` varchar(1024) default '' comment '教师评语',
     `is_checked` boolean default false comment '教师是否批阅',
     primary key (`task_id`, `student_id`)
 );

@@ -16,4 +16,12 @@ public interface StudentChoiceMapper extends BaseMapper<StudentChoicePO> {
             "left join `task` on `choice_question`.`task_id` = `task`.`task_id` " +
             "where `task`.`task_id` = #{taskId}")
     List<StudentChoicePO> selectByTaskId(Long taskId);
+
+    @Select("select `question_option`.`sequence_number` " +
+            "from `student_choice` " +
+            "left join `question_option` on `student_choice`.`question_option_id` = `question_option`.`question_option_id` " +
+            "where `question_option`.`choice_question_id` = #{choiceQuestionId} and " +
+            "`student_choice`.`student_id` = #{studentId} " +
+            "order by `question_option`.`sequence_number` asc ")
+    List<Integer> selectStudentOptionSequenceNumbersByChoiceQuestionId(Long choiceQuestionId, Long studentId);
 }

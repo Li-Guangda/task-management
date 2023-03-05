@@ -7,5 +7,5 @@ import java.util.List;
 @Data
 public class ClassroomTaskInfo {
 
-    private List<TaskInfo> tasks;
+    private List<TaskInfo> taskInfos;
 }

@@ -8,8 +8,17 @@ import java.util.List;
 @Data
 public class StudentTaskProgressInfo {
     private Long taskId;
-    private List<StudentInfo> StudentTaskIsChecked;
-    private List<StudentInfo> StudentTaskIsNotChecked;
-    private List<StudentInfo> StudentTaskIsNotFinished;
+    private Long userId;
+    private String name;
+    private String avatar;
+    private String taskStatus;
+
+    public StudentTaskProgressInfo(Long taskId, Long userId, String name, String avatar, String taskStatus) {
+        this.taskId = taskId;
+        this.userId = userId;
+        this.name = name;
+        this.avatar = avatar;
+        this.taskStatus = taskStatus;
+    }
 }
 

@@ -4,8 +4,11 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.hibernate.validator.constraints.Range;
 
+import java.util.List;
+
 @Data
 public class ChoiceQuestion {
+    private Long choiceQuestionId;
     @Min(value = 1, message = "The sequence number must be greater than 0")
     private Integer sequenceNumber;
     @NotBlank(message = "The question title can not be blank")
@@ -14,5 +17,17 @@ public class ChoiceQuestion {
     private Integer type;
     @Range(min = 1, max = 10, message = "'score' field is in a range of 1 to 10")
     private Integer score;
-    private ChoiceOption[] options;
+    private List<ChoiceOption> options;
+
+    public ChoiceQuestion() {
+    }
+
+    public ChoiceQuestion(Long choiceQuestionId, Integer sequenceNumber, String title, Integer type, Integer score, List<ChoiceOption> options) {
+        this.choiceQuestionId = choiceQuestionId;
+        this.sequenceNumber = sequenceNumber;
+        this.title = title;
+        this.type = type;
+        this.score = score;
+        this.options = options;
+    }
 }

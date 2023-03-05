@@ -45,9 +45,10 @@ public class ClassroomServiceImpl implements IClassroomService {
         List<ClassroomPO> classroomPOS = classroomMapper.selectList(classroomPOQueryWrapper);
 
         List<ClassroomInfo> classroomInfos = new ArrayList<>();
+        QueryWrapper<ClassroomStudentPO> classroomStudentPOQueryWrapper = new QueryWrapper<>();
         for (ClassroomPO classroomPO: classroomPOS) {
-            QueryWrapper<ClassroomStudentPO> classroomStudentPOQueryWrapper = new QueryWrapper<>();
-            classroomPOQueryWrapper.eq("classroom_id", classroomPO.getClassroomId());
+            classroomStudentPOQueryWrapper.clear();
+            classroomStudentPOQueryWrapper.eq("classroom_id", classroomPO.getClassroomId()).eq("joined", true);
             Integer studentCount = classroomStudentMapper.selectCount(classroomStudentPOQueryWrapper).intValue();
             classroomInfos.add(new ClassroomInfo(
                     classroomPO.getClassroomId(),

@@ -29,7 +29,7 @@ public class ClassroomController {
     @PreAuthorize("hasRole('ROLE_LECTURER')")
     public Result newClassroom(@RequestBody ClassroomParams classroomParams) {
         classroomServiceImpl.newClassroom(classroomParams);
-        return Result.onlyMessage("Create new classroom successfully");
+        return Result.onlyMessage("Successfully created a new classroom");
     }
 
     /**
@@ -38,12 +38,12 @@ public class ClassroomController {
      * @param token
      * @return
      */
-    @GetMapping("/user/lecturer/{userId}/classrooms")
+    @GetMapping("/lecturers/{userId}/classrooms")
     @PreAuthorize("hasRole('ROLE_LECTURER') and @preAuthorizeHelper.isUserSelf(#userId, #token)")
     public Result getClassroomsOfLecturer(@PathVariable Long userId,
                                           @RequestHeader("Authorization") String token) {
         List<ClassroomInfo> classroomInfos = classroomServiceImpl.getClassroomsOfLecturer(userId);
-        return new Result("Got all classroom info of the lecturer successfully", new ClassroomInfos(classroomInfos));
+        return new Result("Successfully got all classroom info", new ClassroomInfos(classroomInfos));
     }
 
     /**
@@ -57,23 +57,21 @@ public class ClassroomController {
     public Result getClassroomsOfStudent(@PathVariable Long userId,
                                          @RequestHeader("Authorization") String token) {
         List<ClassroomInfo> classroomInfos = classroomServiceImpl.getClassroomsOfStudent(userId);
-        return new Result("Got all classroom info that the student joined successfully", classroomInfos);
+        return new Result("Successfully got all classroom info", classroomInfos);
     }
 
     /**
      * 教师删除班级
-     * @param userId
      * @param classroomId
      * @param token
      * @return
      */
-    @DeleteMapping("/user/lecturer/{userId}/classroom/{classroomId}")
+    @DeleteMapping("/classrooms/{classroomId}")
     @PreAuthorize("@preAuthorizeHelper.isClassroomLecturer(#classroomId, #token)")
-    public Result deleteClassroomOfLecturer(@PathVariable Long userId,
-                                            @PathVariable Long classroomId,
+    public Result deleteClassroomOfLecturer(@PathVariable Long classroomId,
                                             @RequestHeader("Authorization") String token) {
         classroomServiceImpl.deleteClassroomOfLecturer(classroomId);
-        return Result.onlyMessage("Deleted the classroom successfully");
+        return Result.onlyMessage("Successfully deleted the classroom");
     }
 
     /**
@@ -89,7 +87,7 @@ public class ClassroomController {
                                 @PathVariable Long userId,
                                 @RequestHeader("Authorization") String token) {
         classroomServiceImpl.quitClassroom(classroomId, userId);
-        return Result.onlyMessage("Quit the classroom successfully");
+        return Result.onlyMessage("Successfully quit the classroom");
     }
 
     /**
